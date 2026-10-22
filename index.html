@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Günlük Dualar</title>
+<style>
+  :root{--bg:#f6f3ec;--card:#fff;--ink:#222;--muted:#777;--red:#d93a3a;--orange:#e8920c;--green:#2f9e57}
+  @media (prefers-color-scheme:dark){:root{--bg:#15181a;--card:#1f2326;--ink:#eee;--muted:#9aa}}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,sans-serif;padding:0 14px 60px}
+  header{position:sticky;top:0;background:var(--bg);padding:14px 0 10px;z-index:5;text-align:center}
+  h1{margin:0;font-size:20px}
+  #ozet{color:var(--muted);font-size:14px;margin-top:4px}
+  #bar{height:6px;background:#8883;border-radius:3px;margin-top:8px;overflow:hidden}
+  #bar i{display:block;height:100%;width:0;background:var(--green);transition:width .3s}
+  .dua{background:var(--card);border-radius:16px;padding:18px;margin:14px auto;max-width:640px;
+       box-shadow:0 1px 4px #0002;border-left:8px solid var(--red);transition:border-color .2s}
+  .dua.basladi{border-left-color:var(--orange)}
+  .dua.bitti{border-left-color:var(--green)}
+  .dua h2{margin:0 0 10px;font-size:15px;color:var(--muted);font-weight:600}
+  .ar{font-size:30px;line-height:2.1;margin:6px 0 10px;font-family:"Geeza Pro","Noto Naskh Arabic","Amiri",serif}
+  .okunus{font-size:18px;line-height:1.6;white-space:pre-line;font-style:italic}
+  .meal{font-size:16px;line-height:1.6;white-space:pre-line;margin-top:10px;color:var(--muted)}
+  .not{font-size:14px;color:var(--muted);background:#8881;padding:8px 10px;border-radius:8px;margin-bottom:8px}
+  .kaynak{font-size:12px;color:var(--muted);margin-top:8px}
+  .alt{display:flex;align-items:center;gap:12px;margin-top:16px}
+  .say{flex:1;border:0;border-radius:14px;padding:18px 0;font-size:30px;font-weight:700;color:#fff;
+       background:var(--red);cursor:pointer;user-select:none;touch-action:manipulation}
+  .basladi .say{background:var(--orange)}
+  .bitti .say{background:var(--green)}
+  .say:active{transform:scale(.97)}
+  .say{-webkit-touch-callout:none}
+  .say.basili{background-image:linear-gradient(#fff6,#fff6);background-repeat:no-repeat;background-size:0% 100%;animation:dolum 3s linear forwards}
+  @keyframes dolum{from{background-size:0% 100%}to{background-size:100% 100%}}
+  .say small{display:block;font-size:12px;font-weight:500;opacity:.9}
+  .kucuk{border:1px solid #8885;background:none;color:var(--muted);border-radius:10px;padding:10px 12px;font-size:14px}
+  footer{text-align:center;margin-top:20px}
+
+  #profiller{margin-top:6px}
+  #profiller button{border:1px solid #8885;background:var(--card);color:var(--ink);padding:7px 16px;font-size:15px;margin:0 3px;border-radius:20px}
+  #profiller button.a{background:var(--green);color:#fff;border-color:var(--green)}
+  #bugun{font-size:17px;font-weight:700;margin-top:6px}
+  #bugun.duz{color:var(--orange)}
+  .btn{border:1px solid #8885;background:var(--card);color:var(--ink);border-radius:10px;padding:8px 12px;font-size:14px;margin:8px 4px 0}
+  .dsar{position:relative;display:inline-block}
+  .dsar .btn{pointer-events:none}
+  #dtr{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
+  #uyari{display:none;background:#e8920c33;border-radius:10px;padding:8px;margin-top:8px;font-size:14px}
+  .hnot{font-size:13px;color:var(--green);margin-top:8px}
+  #log{max-width:640px;margin:26px auto 0;background:var(--card);border-radius:16px;padding:16px;box-shadow:0 1px 4px #0002}
+  #log h3{margin:0 0 4px;font-size:16px}
+  #log .alt2{font-size:12px;color:var(--muted);margin-bottom:8px}
+  .lg{display:flex;justify-content:space-between;padding:10px 4px;border-top:1px solid #8883;font-size:15px;cursor:pointer}
+  .lg b.bek{color:var(--muted)}
+  .lg b.ok{color:var(--green)} .lg b.kis{color:var(--orange)} .lg b.yok{color:var(--red)}
+  .lg.sec{background:#8881;border-radius:8px}
+
+  #asagi{position:fixed;right:max(28px,calc(12px + env(safe-area-inset-right)));bottom:calc(22px + env(safe-area-inset-bottom));width:36px;height:36px;border-radius:50%;padding:0;
+         border:0;background:var(--ink);color:var(--bg);font-size:18px;line-height:1;opacity:.8;box-shadow:0 2px 8px #0004;z-index:10}
+</style>
+</head>
+<body>
+<header>
+  <h1>Günlük Dualar</h1>
+  <div id="bugun"></div>
+  <span class="dsar"><button class="btn" id="duzenle" tabindex="-1">✎ Gün düzenle</button><input type="date" id="dtr" aria-label="Gün seç"></span>
+  <div id="uyari"></div>
+  <div id="ozet"></div>
+  <div id="bar"><i></i></div>
+</header>
+<main id="liste"></main>
+<div id="log"><h3>Bu haftanın kaydı</h3>
+  <div class="alt2">Pazar gecesi 23:59'da sıfırlanır. Bir güne dokunursan o günü düzenlersin, ileri günler de dahil.</div>
+  <div id="logliste"></div>
+  <h3 style="margin-top:18px">Haftalık hedef</h3>
+  <div class="alt2">Hafta pazartesi başlar, pazar gecesi biter.</div>
+  <div id="haftalik"></div></div>
+<footer><button class="kucuk" id="hepsiniSifirla" style="color:var(--red);border-color:var(--red)">Seçili günü sıfırla</button> <button class="kucuk" id="hepsiniTamamla" style="color:var(--green);border-color:var(--green)">Seçili günü tamamla</button></footer>
+
+<button id="asagi" aria-label="En alta git">↓</button>
+<script>
+const DUALAR = [
+  {baslik:"İbrahim (40)", adet:11, periyot:"Günlük 11 defa",
+   ar:"رَبِّ اجْعَلْن۪ي مُق۪يمَ الصَّلٰوةِ وَمِنْ ذُرِّيَّت۪يۗ رَبَّنَا وَتَقَبَّلْ دُعَٓاءِ",
+   okunus:"Rabbi-c’alnî mukîme-ssalâti vemin żurriyyetî(c) rabbenâ vetekabbel du’â/-(i)",
+   meal:"Rabbim! Beni ve zürriyetimi namazı dosdoğru kılanlardan eyle! Rabbimiz dualarımızı kabul buyur!"},
+  {baslik:"Bakara (128)", adet:11, periyot:"Günlük 11 defa",
+   ar:"رَبَّنَا وَاجْعَلْنَا مُسْلِمَيْنِ لَكَ وَمِنْ ذُرِّيَّتِنَٓا اُمَّةً مُسْلِمَةً لَكَۖ وَاَرِنَا مَنَاسِكَنَا وَتُبْ عَلَيْنَاۚ اِنَّكَ اَنْتَ التَّوَّابُ الرَّح۪يمُ",
+   okunus:"Rabbenâ vec’alnâ muslimeyni leke vemin żurriyyetinâ ummeten muslimeten leke veerinâ menâsikenâ vetub ‘aleynâ(s) inneke ente-ttevvâbu-rrahîm(u)",
+   meal:"Ey Rabbimiz! Bizi sana boyun eğenlerden kıl, neslimizden de sana itaat eden bir ümmet çıkar, bize ibadet usullerimizi göster, tevbemizi kabul et; zira, tevbeleri çokça kabul eden, çok merhametli olan sensin."},
+  {baslik:"Korunma duası", adet:7, periyot:"Günlük 7 defa",
+   not:"Peygamber Efendimiz s.a.v. tavsiye ettiği dua. “(Büyük) babanız İbrahim de bu duayı oğulları İsmail ile İshak'a okuyup bununla onları Allah'a sığındırırdı.” buyurdu.",
+   ar:"أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّةِ مِنْ كُلِّ شَيْطَانٍ وَهَامَّةٍ وَمِنْ كُلِّ عَيْنٍ لامَّةٍ",
+   okunus:"Eûzü bi-kelimâtillâhi't-tâmmeti min külli şeytânin ve hâmmetin ve min külli aynin lâmmetin",
+   meal:"Her nevi' şeytandan, her haşereden, dokunan her kötü gözden Allah'ın tam olan (şifa verici) kelimelerine sığınırım.",
+   kaynak:"(Buhari, Enbiya, 10; Ebu Davud, Sünne, 20; Tirmizi, Tıb, 8; İbn Mace, Tıb, 36; Ahmed b. Hanbel, 1/236, 270)"},
+  {baslik:"Bismillâhillezî", adet:7, periyot:"Günlük 7 defa",
+   not:"Peygamber Efendimiz s.a.v. tavsiye ettiği dua.",
+   okunus:"Bismillâhillezi lâ yedurru ma'asmihi şey'ün fil erdı ve lâ fissemâi ve hüves-semi'ul alim",
+   meal:"Adı anıldığı zaman gerek yerde gerekse gökte hiçbir şeyin zarar veremeyeceği Allah’ın adıyla! O, hakkıyla işiten ve hakkıyla bilendir.",
+   kaynak:"(Ebû Davud, Edeb, 110; İbn Mâce, Duâ, 14; Tirmizî, De’avât, 13)"},
+  {baslik:"Kalplerin sebatı", adet:7, periyot:"Günlük 7 defa",
+   okunus:"Allahümme ya mukallibel kulûb sebbit kulubena 'alâ dînik(e)\nAllahümme ya musarrifel-kulubi sarrif kulubena ala taatike",
+   meal:"Ey kalpleri hâlden hâle çeviren Allâh’ım! Kalplerimizi dîninde sâbit kıl!\nEy kalpleri yönlendiren Allahım! Kalplerimizi sana itaate yönelt!"},
+  {baslik:"Ya Hadi Ya Allah", adet:66, devam:true, periyot:"Günlük 66 defa (en az 66 gün)",
+   not:"İsteyen günlük 400'e tamamlayabilir; isteyen her namazdan sonra 66 defa zikredebilir. 66'dan sonra da saymaya devam edebilirsin.",
+   okunus:"Ya Hadi Ya Allah",
+   meal:"Hadi: Hidayet veren, yol gösteren."},
+  {baslik:"Cevşen", adet:1, tek:true, periyot:"Günlük 5 hizip",
+   okunus:"Günlük 5 hizip Cevşen okunacak."},
+  {baslik:"Ra'd Suresi", adet:1, tek:true, haftalik:true, periyot:"Haftada 1 defa",
+   okunus:"Ra'd suresi haftada bir defa okunacak."}
+];
+// =======================
+
+const p2=n=>String(n).padStart(2,'0');
+const gk=t=>`${t.getFullYear()}-${p2(t.getMonth()+1)}-${p2(t.getDate())}`;
+const bugunKey=()=>gk(new Date());
+const pazartesi=()=>{const t=new Date();t.setDate(t.getDate()-((t.getDay()+6)%7));return gk(t)};
+const tarih=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d)};
+const uzun=k=>tarih(k).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric',weekday:'long'});
+const pazar=()=>{const t=tarih(pazartesi());t.setDate(t.getDate()+6);return gk(t)};
+const kisa=k=>tarih(k).toLocaleDateString('tr-TR',{day:'numeric',month:'long',weekday:'long'});
+
+let veri={hafta:pazartesi(),gunler:{},h:{}};   // gunler[tarih]=[sayilar], h[i]=haftalık sayaç (sunucuda saklanır)
+const profil=0;   // tek ortak kayıt
+const yeniVeri=()=>({hafta:pazartesi(),gunler:{},h:{}});
+function kaydet(){ try{localStorage.setItem('dualar-v2-tek',JSON.stringify(veri))}catch(e){} }
+async function yukle(){
+  let v=null;
+  try{v=JSON.parse(localStorage.getItem('dualar-v2-tek')||'null')}catch(e){}
+  veri=(v&&v.hafta===pazartesi())?v:yeniVeri();
+}
+let secili=null;                    // null = bugün
+const aktif=()=>secili||bugunKey();
+const gun=k=>veri.gunler[k]||(veri.gunler[k]=DUALAR.map(()=>0));
+const getN=(i,k)=>DUALAR[i].haftalik?(veri.h[i]||0):gun(k)[i];
+const setN=(i,k,n)=>{ if(DUALAR[i].haftalik) veri.h[i]=n; else gun(k)[i]=n; kaydet(); };
+const bitti=(i,k)=>getN(i,k)>=DUALAR[i].adet;
+const GUNLUK=DUALAR.filter(d=>!d.haftalik).length;
+const gunBitenSayi=k=>DUALAR.filter((d,i)=>!d.haftalik&&bitti(i,k)).length;
+
+const liste=document.getElementById('liste');
+const kartlar=DUALAR.map((d,i)=>{
+  if(d.haftalik) return null;   // haftalık hedefler günlük listede yok, en alttaki haftalık bölümde
+  const el=document.createElement('section'); el.className='dua';
+  el.innerHTML=`<h2>${i+1}. ${d.baslik||''} · ${d.periyot||''}</h2>
+     ${d.not?`<div class="not"></div>`:''}${d.ar?`<div class="ar" dir="rtl"></div>`:''}
+     <div class="okunus"></div><div class="meal"></div>${d.kaynak?`<div class="kaynak"></div>`:''}
+     ${d.haftalik?`<div class="hnot"></div>`:''}
+     <div class="alt"><button class="kucuk geri">−1</button><button class="say"></button><button class="kucuk sifir">Sıfırla</button></div>`;
+  [['not',d.not],['ar',d.ar],['okunus',d.okunus],['meal',d.meal],['kaynak',d.kaynak]].forEach(([k,v])=>{
+    const x=el.querySelector('.'+k); if(x) x.textContent=v||'';});
+  const sayBtn=el.querySelector('.say'); let basZ=null, uzunBasildi=false, x0=0, y0=0;
+  const iptal=()=>{clearTimeout(basZ);sayBtn.classList.remove('basili')};
+  sayBtn.addEventListener('pointerdown',e=>{
+    uzunBasildi=false; if(d.tek) return;   // Okundu/Okunmadı olanlarda uzun basış yok
+    x0=e.clientX; y0=e.clientY; sayBtn.classList.add('basili');
+    basZ=setTimeout(()=>{ uzunBasildi=true; sayBtn.classList.remove('basili');
+      const k=aktif(); if(getN(i,k)<d.adet){ setN(i,k,d.adet); } if(navigator.vibrate) navigator.vibrate([60,40,60]); cizgi(); },3000);
+  });
+  sayBtn.addEventListener('pointermove',e=>{ if(Math.abs(e.clientX-x0)>12||Math.abs(e.clientY-y0)>12) iptal(); });
+  ['pointerup','pointercancel','pointerleave'].forEach(t=>sayBtn.addEventListener(t,iptal));
+  sayBtn.addEventListener('contextmenu',e=>e.preventDefault());
+  el.querySelector('.say').onclick=()=>{
+    if(uzunBasildi){ uzunBasildi=false; return; }   // uzun basış zaten tamamladı, ayrıca +1 sayma
+    const k=aktif(), n=getN(i,k);
+    if(d.devam||n<d.adet){ setN(i,k,n+1); if(navigator.vibrate) navigator.vibrate(n+1===d.adet?[60,40,60]:15); cizgi(); }
+  };
+  el.querySelector('.geri').onclick=()=>{const k=aktif(),n=getN(i,k); if(n>0){setN(i,k,n-1);cizgi();}};
+  el.querySelector('.sifir').onclick=()=>{setN(i,aktif(),0);cizgi();};
+  liste.appendChild(el); return el;
+});
+
+function cizgi(){
+  dtrGuncelle();
+  const k=aktif(), bk=bugunKey();
+  const b=document.getElementById('bugun');
+  b.textContent=secili&&secili!==bk?`Düzenlenen gün: ${uzun(k)}`:`Bugün: ${uzun(bk)}`;
+  b.classList.toggle('duz',!!secili&&secili!==bk);
+  const u=document.getElementById('uyari');
+  if(secili&&secili!==bk){u.style.display='block';u.innerHTML=`Başka bir günü düzenliyorsun. <button class="btn" id="geri">Bugüne dön</button>`;
+    document.getElementById('geri').onclick=()=>{secili=null;cizgi();};}
+  else u.style.display='none';
+  DUALAR.forEach((d,i)=>{
+    if(d.haftalik) return;
+    const el=kartlar[i], n=getN(i,k);
+    el.querySelector('.say').innerHTML=d.tek?(n>=1?'Okundu ✓<small>geri almak için −1</small>':'Okunmadı<small>okuyunca dokun</small>'):`${n} / ${d.adet}<small>${n>=d.adet?'Tamamlandı ✓'+(n>d.adet?' (+'+(n-d.adet)+')':''):'dokun'}</small>`;
+    el.classList.toggle('basladi',n>0&&n<d.adet); el.classList.toggle('bitti',n>=d.adet);
+    const h=el.querySelector('.hnot'); if(h) h.textContent=n>=d.adet?'Bu hafta okundu, tüm hafta tamamlanmış sayılır.':'';
+  });
+  const biten=gunBitenSayi(k);
+  document.getElementById('ozet').textContent=`${biten} / ${GUNLUK} dua tamamlandı`;
+  document.querySelector('#bar i').style.width=(biten/GUNLUK*100)+'%';
+  // Log: haftanın başından bugüne
+  const hf=document.getElementById('haftalik'); hf.innerHTML='';
+  DUALAR.forEach((d,i)=>{ if(!d.haftalik) return;
+    const ok=(veri.h[i]||0)>=d.adet;
+    const r=document.createElement('div'); r.className='lg';
+    r.innerHTML=`<span>${d.baslik}<br><small style="color:var(--muted)">${d.periyot||''}</small></span><b class="${ok?'ok':'yok'}">${ok?'Okundu ✓':'Okunmadı'}</b>`;
+    r.onclick=()=>{ veri.h[i]=ok?0:d.adet; kaydet(); if(!ok&&navigator.vibrate) navigator.vibrate([60,40,60]); cizgi(); };
+    hf.appendChild(r);
+  });
+  const lg=document.getElementById('logliste'); lg.innerHTML='';
+  const baslangic=tarih(veri.hafta), son=tarih(pazar());
+  for(let t=new Date(baslangic);t<=son;t.setDate(t.getDate()+1)){
+    const key=gk(t), bn=gunBitenSayi(key);
+    const row=document.createElement('div'); row.className='lg'+(key===k?' sec':'');
+    const durum=bn===GUNLUK?['ok','bitti ✓']:bn>0?['kis',`${bn}/${GUNLUK}`]:key>bk?['bek','bekliyor']:['yok',key===bk?'başlanmadı':'yapılmadı'];
+    row.innerHTML=`<span>${kisa(key)}</span><b class="${durum[0]}">${durum[1]}</b>`;
+    row.onclick=()=>{secili=key===bk?null:key;cizgi();window.scrollTo({top:0,behavior:'smooth'})};
+    lg.appendChild(row);
+  }
+}
+
+// Gün düzenle: bu haftanın pazartesisinden bugüne
+const dtr=document.getElementById('dtr');
+const dtrGuncelle=()=>{ dtr.min=veri.hafta; dtr.max=pazar(); dtr.value=aktif(); };   // takvim bu haftanın günlerini gösterir
+dtr.onchange=()=>{ if(!dtr.value) return; secili=dtr.value===bugunKey()?null:dtr.value; cizgi(); };
+document.getElementById('hepsiniSifirla').onclick=()=>{
+  if(!confirm('Seçili günün sayaçları sıfırlansın mı?')) return;
+  const k=aktif(); DUALAR.forEach((d,i)=>{ if(!d.haftalik) gun(k)[i]=0; }); kaydet(); cizgi();
+};
+
+document.getElementById('hepsiniTamamla').onclick=()=>{
+  const k=aktif(); DUALAR.forEach((d,i)=>{ if(!d.haftalik&&gun(k)[i]<d.adet) gun(k)[i]=d.adet; });
+  kaydet(); if(navigator.vibrate) navigator.vibrate([60,40,60]); cizgi();
+};
+
+const asagiBtn=document.getElementById('asagi');
+const altta=()=>window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-80;
+asagiBtn.onclick=()=>window.scrollTo({top:altta()?0:document.documentElement.scrollHeight,behavior:'smooth'});
+window.addEventListener('scroll',()=>{asagiBtn.textContent=altta()?'↑':'↓'},{passive:true});
+
+// Hafta değişince (pazar gecesi → pazartesi 00:00) tüm kayıt sıfırlanır; gün değişince ekran güncellenir
+let sonGun=bugunKey();
+function kontrol(){
+  if(veri.hafta!==pazartesi()){ veri=yeniVeri(); secili=null; kaydet(); }
+  if(sonGun!==bugunKey()){ sonGun=bugunKey(); }
+  cizgi();
+}
+setInterval(kontrol,15000);
+document.addEventListener('visibilitychange',async()=>{if(!document.hidden){await yukle();kontrol()}});
+yukle().then(kontrol);
+</script>
+</body>
+</html>
