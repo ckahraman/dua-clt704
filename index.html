@@ -58,6 +58,11 @@
 
   #asagi{position:fixed;right:max(28px,calc(12px + env(safe-area-inset-right)));bottom:calc(22px + env(safe-area-inset-bottom));width:36px;height:36px;border-radius:50%;padding:0;
          border:0;background:var(--ink);color:var(--bg);font-size:18px;line-height:1;opacity:.8;box-shadow:0 2px 8px #0004;z-index:10}
+  #popup{display:none;position:fixed;inset:0;background:#0008;z-index:50;align-items:center;justify-content:center;padding:24px}
+  #popup.ac{display:flex}
+  #popup .kutu{background:var(--card);color:var(--ink);border-radius:18px;padding:26px 22px 20px;max-width:420px;width:100%;text-align:center;box-shadow:0 8px 30px #0006}
+  #popup .msj{font-size:20px;line-height:1.5;font-weight:600}
+  #popup .btn{margin-top:18px;padding:10px 24px;font-size:16px}
 </style>
 </head>
 <body>
@@ -78,6 +83,7 @@
   <div id="haftalik"></div></div>
 <footer><button class="kucuk" id="hepsiniSifirla" style="color:var(--red);border-color:var(--red)">Seçili günü sıfırla</button> <button class="kucuk" id="hepsiniTamamla" style="color:var(--green);border-color:var(--green)">Seçili günü tamamla</button></footer>
 
+<div id="popup"><div class="kutu"><div class="msj" id="popmsj"></div><button class="btn" id="popkapat">Kapat</button></div></div>
 <button id="asagi" aria-label="En alta git">↓</button>
 <script>
 const DUALAR = [
@@ -173,7 +179,7 @@ const kartlar=DUALAR.map((d,i)=>{
   liste.appendChild(el); return el;
 });
 
-function cizgi(){
+function cizgiCiz(){
   dtrGuncelle();
   const k=aktif(), bk=bugunKey();
   const b=document.getElementById('bugun');
@@ -212,6 +218,30 @@ function cizgi(){
     row.onclick=()=>{secili=key===bk?null:key;cizgi();window.scrollTo({top:0,behavior:'smooth'})};
     lg.appendChild(row);
   }
+}
+
+// Tamamlanma uyarıları
+const GUN_MESAJ='Bu günün dualarını tamamladınız. Allah kabul etsin! 🤲';
+const HAFTA_MESAJ='Allah kabul etsin! Lütfen haftayı tamamladığınıza dair bilgilendirmeyi yapmayı unutmayın.';
+const popup=document.getElementById('popup');
+const goster=m=>{document.getElementById('popmsj').textContent=m;popup.classList.add('ac');if(navigator.vibrate)navigator.vibrate([60,40,60]);};
+const kapat=()=>popup.classList.remove('ac');
+document.getElementById('popkapat').onclick=kapat;
+popup.onclick=e=>{ if(e.target===popup) kapat(); };   // kutunun dışına basınca kapanır
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') kapat(); });
+const haftaTamam=()=>{
+  for(let i=0;i<7;i++){const t=tarih(veri.hafta);t.setDate(t.getDate()+i);if(gunBitenSayi(gk(t))<GUNLUK) return false;}
+  return DUALAR.every((d,i)=>!d.haftalik||(veri.h[i]||0)>=d.adet);
+};
+let onceki=null;
+function cizgi(){
+  cizgiCiz();
+  const k=aktif(), cur={g:k,hk:veri.hafta,gun:gunBitenSayi(k)===GUNLUK,hafta:haftaTamam()};
+  if(onceki&&onceki.g===k&&onceki.hk===cur.hk){          // sadece aynı gün/haftada tamamlanma anında
+    if(!onceki.hafta&&cur.hafta) goster(HAFTA_MESAJ);
+    else if(!onceki.gun&&cur.gun) goster(GUN_MESAJ);
+  }
+  onceki=cur;
 }
 
 // Gün düzenle: bu haftanın pazartesisinden bugüne
